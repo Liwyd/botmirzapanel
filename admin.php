@@ -239,6 +239,12 @@ if ($text == $textbotlang['Admin']['keyboardadmin']['add_panel']) {
     savedata("save", "username_panel", $text);
 } elseif ($user['step'] == "add_password_panel") {
     $userdata = json_decode($user['Processing_value'], true);
+    savedata("save", "password_panel", $text);
+    if ($userdata['type'] == "mit") {
+        sendmessage($from_id, $textbotlang['Admin']['mit']['setup_mit_url'] ?? "MIT Panel URL را وارد کنید:", $backadmin, 'HTML');
+        step('add_mit_url', $from_id);
+        return;
+    }
     $inboundid = "0";
     $sublink = "onsublink";
     $config = "offconfig";
@@ -258,6 +264,47 @@ if ($text == $textbotlang['Admin']['keyboardadmin']['add_panel']) {
     } elseif ($userdata['type'] == "mikrotik") {
         sendmessage($from_id, $textbotlang['Admin']['managepanel']['mikrotik'], null, 'HTML');
     }
+    step('home', $from_id);
+} elseif ($user['step'] == "add_mit_url") {
+    if (!filter_var($text, FILTER_VALIDATE_URL)) {
+        sendmessage($from_id, $textbotlang['Admin']['managepanel']['Invalid-domain'], $backadmin, 'HTML');
+        return;
+    }
+    savedata("save", "mit_url", $text);
+    sendmessage($from_id, $textbotlang['Admin']['mit']['setup_mit_admin_user'] ?? "نام کاربری ادمین کامل MIT را وارد کنید:", $backadmin, 'HTML');
+    step('add_mit_admin_user', $from_id);
+} elseif ($user['step'] == "add_mit_admin_user") {
+    savedata("save", "mit_admin_user", $text);
+    sendmessage($from_id, $textbotlang['Admin']['mit']['setup_mit_admin_pass'] ?? "رمز عبور ادمین کامل MIT را وارد کنید:", $backadmin, 'HTML');
+    step('add_mit_admin_pass', $from_id);
+} elseif ($user['step'] == "add_mit_admin_pass") {
+    savedata("save", "mit_admin_pass", $text);
+    sendmessage($from_id, $textbotlang['Admin']['mit']['setup_mit_api_key'] ?? "کلید API (BOT_API_KEY) پنل MIT را وارد کنید:", $backadmin, 'HTML');
+    step('add_mit_api_key', $from_id);
+} elseif ($user['step'] == "add_mit_api_key") {
+    savedata("save", "mit_api_key", $text);
+    sendmessage($from_id, $textbotlang['Admin']['mit']['setup_mit_target_admin'] ?? "نام کاربری ادمین (ساب‌ادمین) مربوط به این پنل در MIT را وارد کنید:", $backadmin, 'HTML');
+    step('add_mit_target_admin', $from_id);
+} elseif ($user['step'] == "add_mit_target_admin") {
+    $userdata = json_decode($user['Processing_value'], true);
+    $mit_config = json_encode([
+        'mit_url' => $userdata['mit_url'],
+        'mit_admin_user' => $userdata['mit_admin_user'],
+        'mit_admin_pass' => $userdata['mit_admin_pass'],
+        'mit_api_key' => $userdata['mit_api_key'],
+        'mit_target_admin' => $text
+    ]);
+    $inboundid = "0";
+    $sublink = "onsublink";
+    $config = "offconfig";
+    $valueteststatus = "ontestshowpanel";
+    $stauts = "activepanel";
+    $on_hold = "offonhold";
+    $stmt = $pdo->prepare("INSERT INTO marzban_panel (name_panel,url_panel,username_panel,password_panel,type,inboundid,sublink,configManual,MethodUsername,statusTest,status,onholdstatus,mit_config) VALUES (?, ?, ?, ?, ?,?,?,?,?,?,?,?,?)");
+    $stmt->execute([$userdata['name'], $userdata['url_panel'], $userdata['username_panel'], $userdata['password_panel'], 'mit', $inboundid, $sublink, $config, $textbotlang['users']['customidAndRandom'], $valueteststatus, $stauts, $on_hold, $mit_config]);
+    sendmessage($from_id, $textbotlang['Admin']['managepanel']['addedpanel'], $backadmin, 'HTML');
+    sendmessage($from_id, "🥳", $keyboardadmin, 'HTML');
+    sendmessage($from_id, $textbotlang['Admin']['managepanel']['notemarzban'] ?? "MIT Panel added. VPN users will be created on the underlying Marzban panel.", null, 'HTML');
     step('home', $from_id);
 }
 if ($text == $textbotlang['Admin']['keyboardadmin']['send_message']) {

@@ -296,6 +296,11 @@ try {
             $connect->query("UPDATE marzban_panel SET type = 'marzban'");
             echo "The type field was added ✅";
         }
+        $Check_filde = $connect->query("SHOW COLUMNS FROM marzban_panel LIKE 'mit_config'");
+        if (mysqli_num_rows($Check_filde) != 1) {
+            $connect->query("ALTER TABLE marzban_panel ADD mit_config TEXT");
+            echo "The mit_config field was added ✅";
+        }
         }
 } catch (Exception $e) {
     file_put_contents("$randomString.txt",$e->getMessage());

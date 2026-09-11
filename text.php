@@ -860,9 +860,21 @@ $textbotlang['Admin']['managepanel']['type']['wgdashboard'] = "wgdashboard";
 $textbotlang['Admin']['managepanel']['type']['mikrotik'] = "میکروتیک";
 $textbotlang['Admin']['managepanel']['type']['3x-ui'] = "سنایی";
 $textbotlang['Admin']['managepanel']['type']['alireza'] = "علیرضا";
+$textbotlang['Admin']['managepanel']['type']['mit'] = "MIT Panel";
 
 
 
+$textbotlang['Admin']['mit'] = [
+    'low_volume' => "⚠️ هشدار: حجم باقیمانده پنل MIT '%s' فقط %.1f گیگابایت است. ممکن است کاربران در ساخت سفارش با مشکل مواجه شوند.",
+    'insufficient_traffic' => "حجم مجاز پنل ادمین از سمت پشتیبانی ربات کافی نیست. لطفاً با پشتیبانی تماس بگیرید.",
+    'setup_mit_url' => "لینک پنل MIT Panel را وارد کنید:",
+    'setup_mit_admin_user' => "نام کاربری ادمین کامل (SuperAdmin) پنل MIT را وارد کنید:",
+    'setup_mit_admin_pass' => "رمز عبور ادمین کامل (SuperAdmin) پنل MIT را وارد کنید:",
+    'setup_mit_api_key' => "کلید API (BOT_API_KEY) پنل MIT را وارد کنید:",
+    'setup_mit_target_admin' => "نام کاربری ادمین (ساب‌ادمین) مربوط به این پنل در MIT را وارد کنید:",
+    'setup_mit_test_success' => "اتصال به پنل MIT با موفقیت برقرار شد.",
+    'setup_mit_test_fail' => "خطا در اتصال به پنل MIT: %s",
+];
 
 
 $textbotlang['Admin']['ManageUser']['SendMessageuser'] = "✅ پیام با موفقیت برای کاربر ارسال گردید.";

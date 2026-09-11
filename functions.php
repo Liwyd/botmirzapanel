@@ -255,6 +255,20 @@ function DirectPayment($order_id)
             }
             return;
         }
+        // MIT Panel: Deduct traffic after successful user creation
+        if ($marzban_list_get['type'] == 'mit') {
+            $mit_target_admin = mit_get_target_admin($get_invoice['Service_location']);
+            if ($mit_target_admin) {
+                $deduct_bytes = $get_invoice['Volume'] * pow(1024, 3);
+                $deduct_result = mit_deduct_traffic($get_invoice['Service_location'], $mit_target_admin, $deduct_bytes);
+                if ($deduct_result['success']) {
+                    $remaining_gb = $deduct_result['remaining'] / pow(1024, 3);
+                    if ($remaining_gb < 200) {
+                        mit_send_low_volume_alert($get_invoice['id_user'], $get_invoice['Service_location'], $remaining_gb);
+                    }
+                }
+            }
+        }
         $output_config_link = "";
         $config = "";
         $Shoppinginfo = [

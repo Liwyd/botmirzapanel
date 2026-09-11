@@ -8,6 +8,7 @@ require_once 'alireza_single.php';
 require_once 's_ui.php';
 require_once 'wgdashboard.php';
 require_once 'mikrotik.php';
+require_once 'mit.php';
 class ManagePanel
 {
     public $name_panel;
@@ -147,7 +148,21 @@ class ManagePanel
                 $Output['subscription_url'] = $password;
                 $Output['configs'] = [];
             }
-
+        } elseif ($Get_Data_Panel['type'] == "mit") {
+            $ConnectToPanel = adduser($usernameC, $expire, $data_limit, $Get_Data_Panel['name_panel'], $is_test);
+            $data_Output = json_decode($ConnectToPanel, true);
+            if (isset($data_Output['detail']) && $data_Output['detail']) {
+                $Output['status'] = 'Unsuccessful';
+                $Output['msg'] = $data_Output['detail'];
+            } else {
+                if (!preg_match('/^(https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(:\d+)?((\/[^\s\/]+)+)?$/', $data_Output['subscription_url'])) {
+                    $data_Output['subscription_url'] = $Get_Data_Panel['url_panel'] . "/" . ltrim($data_Output['subscription_url'], "/");
+                }
+                $Output['status'] = 'successful';
+                $Output['username'] = $data_Output['username'];
+                $Output['subscription_url'] = $data_Output['subscription_url'];
+                $Output['configs'] = $data_Output['links'];
+            }
         } else {
             $Output['status'] = 'Unsuccessful';
             $Output['msg'] = 'Panel Not Found';
@@ -414,6 +429,33 @@ class ManagePanel
                 'links' => [],
                 'subscription_url' => $UsernameData['password'],
             );
+        } elseif ($Get_Data_Panel['type'] == "mit") {
+            $UsernameData = getuser($username, $Get_Data_Panel['name_panel']);
+            if (isset($UsernameData['detail']) && $UsernameData['detail']) {
+                return array(
+                    'status' => 'Unsuccessful',
+                    'msg' => $UsernameData['detail']
+                );
+            } elseif (!isset($UsernameData['username'])) {
+                return array(
+                    'status' => 'Unsuccessful',
+                    'msg' => $UsernameData['detail']
+                );
+            }
+            if (!preg_match('/^(https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(:\d+)?((\/[^\s\/]+)+)?$/', $UsernameData['subscription_url'])) {
+                $UsernameData['subscription_url'] = $Get_Data_Panel['url_panel'] . "/" . ltrim($UsernameData['subscription_url'], "/");
+            }
+            $UsernameData['expire'] = $UsernameData['status'] == 'on_hold' ? 0 : $UsernameData['expire'];
+            $Output = array(
+                'status' => $UsernameData['status'],
+                'username' => $UsernameData['username'],
+                'data_limit' => $UsernameData['data_limit'],
+                'expire' => $UsernameData['expire'],
+                'online_at' => $UsernameData['online_at'],
+                'used_traffic' => $UsernameData['used_traffic'],
+                'links' => $UsernameData['links'],
+                'subscription_url' => $UsernameData['subscription_url'],
+            );
         } else {
             $Output = array(
                 'status' => 'Unsuccessful',
@@ -625,6 +667,25 @@ class ManagePanel
                     'subscription_url' => $url_sub,
                 );
             }
+        } else if ($Get_Data_Panel['type'] == "mit") {
+            $revoke_sub = revoke_sub($username, $name_panel);
+            if (isset($revoke_sub['detail']) && $revoke_sub['detail']) {
+                $Output = array(
+                    'status' => 'Unsuccessful',
+                    'msg' => $revoke_sub['detail']
+                );
+            } else {
+                $config = new ManagePanel();
+                $Data_User = $config->DataUser($name_panel, $username);
+                if (!preg_match('/^(https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(:\d+)?((\/[^\s\/]+)+)?$/', $Data_User['subscription_url'])) {
+                    $Data_User['subscription_url'] = $Get_Data_Panel['url_panel'] . "/" . ltrim($Data_User['subscription_url'], "/");
+                }
+                $Output = array(
+                    'status' => 'successful',
+                    'configs' => $Data_User['links'],
+                    'subscription_url' => $Data_User['subscription_url']
+                );
+            }
         } else {
             $Output = array(
                 'status' => 'Unsuccessful',
@@ -718,6 +779,19 @@ class ManagePanel
                     'username' => $username,
                 );
             }
+        } elseif ($Get_Data_Panel['type'] == "mit") {
+            $UsernameData = removeuser($Get_Data_Panel['name_panel'], $username);
+            if (isset($UsernameData['detail']) && $UsernameData['detail']) {
+                $Output = array(
+                    'status' => 'Unsuccessful',
+                    'msg' => $UsernameData['detail']
+                );
+            } else {
+                $Output = array(
+                    'status' => 'successful',
+                    'username' => $username,
+                );
+            }
         } else {
             $Output = array(
                 'status' => 'Unsuccessful',
@@ -745,6 +819,8 @@ class ManagePanel
             allowAccessPeers($name_panel, $username);
             $datauser = get_userwg($username, $name_panel);
             ResetUserDataUsagewg($datauser['id'], $name_panel);
+        } elseif ($Get_Data_Panel['type'] == "mit") {
+            ResetUserDataUsage($username, $name_panel);
         }
     }
     function Modifyuser($username, $name_panel, $config = array())
@@ -849,6 +925,8 @@ class ManagePanel
             );
             $configs = array_merge($configs, $config);
             return updatepear($Get_Data_Panel['name_panel'], $configs);
+        } elseif ($Get_Data_Panel['type'] == "mit") {
+            Modifyuser($name_panel, $username, $config);
         }
 
     }

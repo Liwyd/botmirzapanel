@@ -1740,6 +1740,19 @@ if ($text == $datatextbot['text_sell'] || $datain == "buy" || $text == "/buy") {
         sendmessage($from_id, $textbotlang['users']['status']['error2'], $keyboard, 'HTML');
         return;
     }
+    // MIT Panel: Check traffic before creating user
+    if ($marzban_list_get['type'] == 'mit') {
+        $mit_target_admin = mit_get_target_admin($user['Processing_value']);
+        if ($mit_target_admin) {
+            $required_bytes = $info_product['Volume_constraint'] * pow(1024, 3);
+            $traffic_check = mit_check_traffic($user['Processing_value'], $mit_target_admin, $required_bytes);
+            if (!$traffic_check['sufficient']) {
+                sendmessage($from_id, $textbotlang['Admin']['mit']['insufficient_traffic'] ?? "حجم مجاز پنل ادمین کافی نیست. لطفاً با پشتیبانی تماس بگیرید.", $keyboard, 'HTML');
+                step('home', $from_id);
+                return;
+            }
+        }
+    }
     if ($marzban_list_get['linksubx'] == null and in_array($marzban_list_get['type'], ["x-ui_single", "alireza"])) {
         foreach ($admin_ids as $admin) {
             sendmessage($admin, sprintf($textbotlang['Admin']['managepanel']['notsetlinksub'], $marzban_list_get['name_panel']), null, 'HTML');
@@ -1809,6 +1822,20 @@ if ($text == $datatextbot['text_sell'] || $datain == "buy" || $text == "/buy") {
         }
         step('home', $from_id);
         return;
+    }
+    // MIT Panel: Deduct traffic after successful user creation
+    if ($marzban_list_get['type'] == 'mit') {
+        $mit_target_admin = mit_get_target_admin($user['Processing_value']);
+        if ($mit_target_admin) {
+            $deduct_bytes = $info_product['Volume_constraint'] * pow(1024, 3);
+            $deduct_result = mit_deduct_traffic($user['Processing_value'], $mit_target_admin, $deduct_bytes);
+            if ($deduct_result['success']) {
+                $remaining_gb = $deduct_result['remaining'] / pow(1024, 3);
+                if ($remaining_gb < 200) {
+                    mit_send_low_volume_alert($from_id, $user['Processing_value'], $remaining_gb);
+                }
+            }
+        }
     }
     if ($datain == "confirmandgetserviceDiscount") {
         $SellDiscountlimit = select("DiscountSell", "*", "codeDiscount", $partsdic[0], "select");
