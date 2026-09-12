@@ -1060,11 +1060,8 @@ function install_bot_with_marzban() {
     DOMAIN_NAME="$domainname"
     echo -e "\e[92mDomain set to: $DOMAIN_NAME\033[0m"
 
-    # Start nginx for certbot
-    sudo systemctl start nginx || {
-        echo -e "\e[91mError: Failed to start nginx before Certbot.\033[0m"
-        exit 1
-    }
+    # Stop nginx to free port 80 for certbot standalone
+    sudo systemctl stop nginx 2>/dev/null
     sudo certbot certonly --standalone --agree-tos --preferred-challenges http -d "$DOMAIN_NAME" || {
         echo -e "\e[91mError: Failed to obtain SSL certificate.\033[0m"
         exit 1
@@ -1082,8 +1079,8 @@ function install_bot_with_marzban() {
         echo -e "\e[91mError: nginx configuration test failed.\033[0m"
         exit 1
     }
-    sudo systemctl restart nginx || {
-        echo -e "\e[91mError: Failed to restart nginx after SSL configuration.\033[0m"
+    sudo systemctl start nginx || {
+        echo -e "\e[91mError: Failed to start nginx after SSL configuration.\033[0m"
         systemctl status nginx.service
         exit 1
     }
@@ -1812,8 +1809,16 @@ function change_domain() {
     CONFIG_FILE="/var/www/html/mirzabotconfig/config.php"
     BOT_DIR="/var/www/html/mirzabotconfig"
 
-    # Reconfigure nginx for the new domain
-    configure_nginx_bot "$new_domain" "$BOT_DIR"
+    # Reconfigure nginx for the new domain (detect Marzban for port 88 vs 443)
+    if check_marzban_installed; then
+        configure_nginx_bot_marzban "$new_domain" "$BOT_DIR"
+        WEBHOOK_DOMAIN="${new_domain}:88"
+        NEW_DOMAINHOSTS="${new_domain}:88/mirzabotconfig"
+    else
+        configure_nginx_bot "$new_domain" "$BOT_DIR"
+        WEBHOOK_DOMAIN="$new_domain"
+        NEW_DOMAINHOSTS="${new_domain}/mirzabotconfig"
+    fi
 
     echo -e "\033[33mRestarting nginx after SSL configuration...\033[0m"
     if ! sudo systemctl start nginx; then
@@ -1824,13 +1829,13 @@ function change_domain() {
     if [ -f "$CONFIG_FILE" ]; then
         sudo cp "$CONFIG_FILE" "$CONFIG_FILE.$(date +%s).bak"
 
-        sudo sed -i "s/\$domainhosts = '.*\/mirzabotconfig';/\$domainhosts = '${new_domain}\/mirzabotconfig';/" "$CONFIG_FILE"
+        sudo sed -i "s|\$domainhosts = '.*';|\$domainhosts = '${NEW_DOMAINHOSTS}';|" "$CONFIG_FILE"
 
         NEW_SECRET=$(openssl rand -base64 12 | tr -dc 'a-zA-Z0-9')
         sudo sed -i "s/\$secrettoken = '.*';/\$secrettoken = '${NEW_SECRET%%}';/" "$CONFIG_FILE"
 
         BOT_TOKEN=$(awk -F"'" '/\$APIKEY/{print $2}' "$CONFIG_FILE")
-        curl -s -o /dev/null -F "url=https://${new_domain}/mirzabotconfig/index.php" \
+        curl -s -o /dev/null -F "url=https://${WEBHOOK_DOMAIN}/mirzabotconfig/index.php" \
              -F "secret_token=${NEW_SECRET}" \
              "https://api.telegram.org/bot${BOT_TOKEN}/setWebhook" || {
             echo -e "\033[33m[WARNING] Webhook update failed\033[0m"
@@ -1840,7 +1845,7 @@ function change_domain() {
         return 1
     fi
 
-    if curl -sI "https://${new_domain}" | grep -q "200"; then
+    if curl -sI "https://${WEBHOOK_DOMAIN}" | grep -q "200"; then
         echo -e "\033[32mDomain successfully migrated to ${new_domain}\033[0m"
     else
         echo -e "\033[31m[WARNING] Final verification failed!\033[0m"
