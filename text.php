@@ -665,8 +665,8 @@ $textbotlang['Admin']['login-admin'] = "
 سلام 😍
 ⭕️ نسخه فعلی ربات شما : %s
 
-channel : @mirzapanel
-group : @mirzapanelgroup
+channel : @mitvpn
+group : @MITsupports
 
 ❓راهنمایی : 
 1 - برای اضافه کردن پنل دکمه پنل   را زده و دکمه اضافه کردن پنل را بزنید.
