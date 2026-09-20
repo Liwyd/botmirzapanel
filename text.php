@@ -861,6 +861,7 @@ $textbotlang['Admin']['managepanel']['type']['mikrotik'] = "میکروتیک";
 $textbotlang['Admin']['managepanel']['type']['3x-ui'] = "سنایی";
 $textbotlang['Admin']['managepanel']['type']['alireza'] = "علیرضا";
 $textbotlang['Admin']['managepanel']['type']['mit'] = "MIT Panel";
+$textbotlang['Admin']['managepanel']['type']['rebecca'] = "ربکا";
 
 
 

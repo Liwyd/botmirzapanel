@@ -1103,6 +1103,19 @@ if (preg_match('/subscriptionurl_(\w+)/', $datain, $dataget)) {
             setjob($namepanel, "date", $newDate, $datauser['id']);
         }
         setjob($namepanel, "total_data", $product['Volume_constraint'], $datauser['id']);
+    } elseif ($marzban_list_get['type'] == "rebecca") {
+        if (intval($product['Service_time']) == 0) {
+            $newDate = 0;
+        } else {
+            $date = strtotime("+" . $product['Service_time'] . "day");
+            $newDate = strtotime(date("Y-m-d H:i:s", $date));
+        }
+        $data_limit = intval($product['Volume_constraint']) * pow(1024, 3);
+        $datam = array(
+            "expire" => $newDate,
+            "data_limit" => $data_limit
+        );
+        $ManagePanel->Modifyuser($user['Processing_value'], $nameloc['Service_location'], $datam);
     }
     $keyboardextendfnished = json_encode([
         'inline_keyboard' => [
@@ -1261,6 +1274,10 @@ if (preg_match('/subscriptionurl_(\w+)/', $datain, $dataget)) {
             ResetUserDataUsagewg($datauser['id'], $nameloc['Service_location']);
         }
         setjob($nameloc['Service_location'], "total_data", $data_limit, $datauser['id']);
+    } elseif ($marzban_list_get['type'] == "rebecca") {
+        $datam = array(
+            "data_limit" => $data_limit
+        );
     }
     $ManagePanel->Modifyuser($nameloc['username'], $marzban_list_get['name_panel'], $datam);
     $keyboardextrafnished = json_encode([

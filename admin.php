@@ -190,6 +190,23 @@ if ($text == $textbotlang['Admin']['managepanel']['btnshowconnect']) {
         } else {
             sendmessage($from_id, $textbotlang['Admin']['managepanel']['connectx-ui'], $optionmikrotik, 'HTML');
         }
+    } elseif ($marzban_list_get['type'] == "rebecca") {
+        $Check_token = token_panel_rebecca($marzban_list_get['id']);
+        if (isset($Check_token['access_token'])) {
+            $System_Stats = Get_System_Stats_rebecca($user['Processing_value']);
+            $active_users = $System_Stats['users_active'] ?? $System_Stats['active'] ?? 0;
+            $total_user = $System_Stats['total_user'] ?? $System_Stats['total'] ?? 0;
+            $mem_total = formatBytes($System_Stats['mem_total'] ?? 0);
+            $mem_used = formatBytes($System_Stats['mem_used'] ?? 0);
+            $bandwidth = formatBytes(($System_Stats['outgoing_bandwidth'] ?? 0) + ($System_Stats['incoming_bandwidth'] ?? 0));
+            $text_rebecca = sprintf($textbotlang['Admin']['managepanel']['infomarzban'], $total_user, $active_users, $System_Stats['version'] ?? 'rebecca', $mem_total, $mem_used, $bandwidth);
+            sendmessage($from_id, $text_rebecca, null, 'HTML');
+        } elseif (isset($Check_token['detail']) && $Check_token['detail'] == "Incorrect username or password") {
+            sendmessage($from_id, $textbotlang['Admin']['managepanel']['Incorrectinfo'], null, 'HTML');
+        } else {
+            $text_rebecca = $textbotlang['Admin']['managepanel']['errorstatuspanel'] . json_encode($Check_token);
+            sendmessage($from_id, $text_rebecca, null, 'HTML');
+        }
     }
     step('home', $from_id);
 }
@@ -243,6 +260,11 @@ if ($text == $textbotlang['Admin']['keyboardadmin']['add_panel']) {
     if ($userdata['type'] == "mit") {
         sendmessage($from_id, $textbotlang['Admin']['mit']['setup_mit_url'] ?? "MIT Panel URL را وارد کنید:", $backadmin, 'HTML');
         step('add_mit_url', $from_id);
+        return;
+    }
+    if ($userdata['type'] == "rebecca") {
+        sendmessage($from_id, "آیدی سرویس (Service ID) پنل ربکا را وارد کنید:", $backadmin, 'HTML');
+        step('add_service_id_rebecca', $from_id);
         return;
     }
     $inboundid = "0";
@@ -305,6 +327,20 @@ if ($text == $textbotlang['Admin']['keyboardadmin']['add_panel']) {
     sendmessage($from_id, $textbotlang['Admin']['managepanel']['addedpanel'], $backadmin, 'HTML');
     sendmessage($from_id, "🥳", $keyboardadmin, 'HTML');
     sendmessage($from_id, $textbotlang['Admin']['managepanel']['notemarzban'] ?? "MIT Panel added. VPN users will be created on the underlying Marzban panel.", null, 'HTML');
+    step('home', $from_id);
+} elseif ($user['step'] == "add_service_id_rebecca") {
+    $userdata = json_decode($user['Processing_value'], true);
+    $inboundid = $text;
+    $sublink = "onsublink";
+    $config = "offconfig";
+    $valueteststatus = "ontestshowpanel";
+    $stauts = "activepanel";
+    $on_hold = "offonhold";
+    $stmt = $pdo->prepare("INSERT INTO marzban_panel (name_panel,url_panel,username_panel,password_panel,type,inboundid,sublink,configManual,MethodUsername,statusTest,status,onholdstatus) VALUES (?, ?, ?, ?, ?,?,?,?,?,?,?,?)");
+    $stmt->execute([$userdata['name'], $userdata['url_panel'], $userdata['username_panel'], $userdata['password_panel'], 'rebecca', $inboundid, $sublink, $config, $textbotlang['users']['customidAndRandom'], $valueteststatus, $stauts, $on_hold]);
+    sendmessage($from_id, $textbotlang['Admin']['managepanel']['addedpanel'], $backadmin, 'HTML');
+    sendmessage($from_id, "🥳", $keyboardadmin, 'HTML');
+    sendmessage($from_id, "پنل ربکا با موفقیت اضافه شد. سرویس‌ها بر اساس Service ID مدیریت می‌شوند.", null, 'HTML');
     step('home', $from_id);
 }
 if ($text == $textbotlang['Admin']['keyboardadmin']['send_message']) {

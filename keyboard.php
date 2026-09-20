@@ -544,6 +544,20 @@ $optionMit = json_encode([
     ],
     'resize_keyboard' => true
 ]);
+$optionRebecca = json_encode([
+    'keyboard' => [
+        [['text' => $textbotlang['Admin']['managepanel']['btnshowconnect']], ['text' => $textbotlang['Admin']['managepanel']['showpanelbtn']]],
+        [['text' => $textbotlang['Admin']['managepanel']['showpaneltestbtn']], ['text' => $textbotlang['Admin']['managepanel']['setinbound']]],
+        [['text' => $textbotlang['Admin']['managepanel']['keyboardpanel']['namepanel']], ['text' => $textbotlang['Admin']['managepanel']['keyboardpanel']['removepanel']]],
+        [['text' => $textbotlang['Admin']['managepanel']['keyboardpanel']['editurl']], ['text' => $textbotlang['Admin']['managepanel']['keyboardpanel']['editusername']]],
+        [['text' => $textbotlang['Admin']['managepanel']['keyboardpanel']['editpassword']],
+         ['text' => $textbotlang['Admin']['managepanel']['methodusername']]],
+        [['text' => $textbotlang['Admin']['managepanel']['sublinkstatus']], ['text' => $textbotlang['Admin']['managepanel']['configstatus']]],
+        [['text' => $textbotlang['Admin']['managepanel']['keyboardpanel']['on_hold_status']]],
+        [['text' => $textbotlang['Admin']['Back-Adminment']]]
+    ],
+    'resize_keyboard' => true
+]);
 $supportoption = json_encode([
     'inline_keyboard' => [
         [
@@ -584,6 +598,9 @@ $typepanel = json_encode([
         ],
         [
             ['text' => $textbotlang['Admin']['managepanel']['type']['mit'], 'callback_data' => "typepanel%mit"]
+        ],
+        [
+            ['text' => $textbotlang['Admin']['managepanel']['type']['rebecca'], 'callback_data' => "typepanel%rebecca"]
         ],
         [
             ['text' => $textbotlang['Admin']['Back-Adminment'], 'callback_data' => "back_admin"]

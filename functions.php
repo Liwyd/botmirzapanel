@@ -570,6 +570,8 @@ function outtypepanel($typepanel, $message)
         sendmessage($from_id, $message, $options_ui, 'HTML');
     } elseif ($typepanel == "mikrotik") {
         sendmessage($from_id, $message, $optionmikrotik, 'HTML');
+    } elseif ($typepanel == "rebecca") {
+        sendmessage($from_id, $message, $optionRebecca, 'HTML');
     }
 }
 function isBase64($string)
