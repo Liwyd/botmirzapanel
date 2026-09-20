@@ -1894,14 +1894,17 @@ function install_additional_bot() {
         fi
     done
 
-    # Stop nginx to free port 80 for certbot
+    # Stop nginx to free port 80 for certbot standalone
     echo -e "\033[33mStopping nginx to free port 80...\033[0m"
-    sudo systemctl stop nginx
+    sudo systemctl stop nginx 2>/dev/null
+    sleep 2
 
     # Obtain SSL Certificate
     echo -e "\033[33mObtaining SSL certificate...\033[0m"
     sudo certbot certonly --standalone --agree-tos --preferred-challenges http -d "$DOMAIN_NAME" || {
         echo -e "\033[31mError obtaining SSL certificate.\033[0m"
+        echo -e "\033[33mRestarting nginx...\033[0m"
+        sudo systemctl start nginx 2>/dev/null
         return 1
     }
 
