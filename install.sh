@@ -2033,7 +2033,7 @@ NGINXEOF
 \$usernamedb = '$DB_USERNAME';
 \$passworddb = '$DB_PASSWORD';
 \$dbname = '$DB_NAME';
-\$domainhosts = '$DOMAIN_NAME/$BOT_NAME';
+\$domainhosts = '$DOMAIN_NAME';
 \$adminnumber = '$CHAT_ID';
 \$usernamebot = '$BOT_NAME';
 \$connect = mysqli_connect('localhost', \$usernamedb, \$passworddb, \$dbname);
@@ -2062,9 +2062,9 @@ EOF
 
     sudo nginx -t && sudo systemctl reload nginx
 
-    # Set Webhook
+    # Set Webhook (root is already /var/www/html/$BOT_NAME, so URL is just /index.php)
     echo -e "\033[33mSetting webhook for bot...\033[0m"
-    curl -F "url=https://$DOMAIN_NAME/$BOT_NAME/index.php" "https://api.telegram.org/bot$BOT_TOKEN/setWebhook" || {
+    curl -F "url=https://$DOMAIN_NAME/index.php" "https://api.telegram.org/bot$BOT_TOKEN/setWebhook" || {
         echo -e "\033[31mError: Failed to set webhook for bot.\033[0m"
         return 1
     }
@@ -2077,7 +2077,7 @@ EOF
     }
 
     # Execute table creation script
-    TABLE_SETUP_URL="https://${DOMAIN_NAME}/$BOT_NAME/table.php"
+    TABLE_SETUP_URL="https://${DOMAIN_NAME}/table.php"
     echo -e "\033[33mSetting up database tables...\033[0m"
     curl -s "$TABLE_SETUP_URL" || {
         echo -e "\033[31mError: Failed to execute table creation script at $TABLE_SETUP_URL.\033[0m"
