@@ -173,8 +173,10 @@ function configure_nginx_bot() {
     local DOMAIN="$1"
     local BOT_DIR="$2"
     local NGINX_CONF="/etc/nginx/sites-available/mirzabotconfig"
+    local TMP_CONF=$(mktemp)
+    local PHP_VER=$(detect_php_version)
 
-    sudo bash -c "cat > $NGINX_CONF <<NGINXEOF
+    cat > "$TMP_CONF" <<NGINXEOF
 server {
     listen 80;
     server_name $DOMAIN;
@@ -200,7 +202,7 @@ server {
 
     location ~ \.php\$ {
         include fastcgi_params;
-        fastcgi_pass unix:/var/run/php/php$(detect_php_version)-fpm.sock;
+        fastcgi_pass unix:/var/run/php/php${PHP_VER}-fpm.sock;
         fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
         fastcgi_read_timeout 300;
     }
@@ -209,8 +211,9 @@ server {
         deny all;
     }
 }
-NGINXEOF"
+NGINXEOF
 
+    sudo mv "$TMP_CONF" "$NGINX_CONF"
     sudo ln -sf /etc/nginx/sites-available/mirzabotconfig /etc/nginx/sites-enabled/mirzabotconfig
     sudo rm -f /etc/nginx/sites-enabled/default
 }
@@ -220,8 +223,10 @@ function configure_nginx_bot_marzban() {
     local DOMAIN="$1"
     local BOT_DIR="$2"
     local NGINX_CONF="/etc/nginx/sites-available/mirzabotconfig"
+    local TMP_CONF=$(mktemp)
+    local PHP_VER=$(detect_php_version)
 
-    sudo bash -c "cat > $NGINX_CONF <<NGINXEOF
+    cat > "$TMP_CONF" <<NGINXEOF
 server {
     listen 88 ssl http2;
     server_name $DOMAIN;
@@ -241,7 +246,7 @@ server {
 
     location ~ \.php\$ {
         include fastcgi_params;
-        fastcgi_pass unix:/var/run/php/php$(detect_php_version)-fpm.sock;
+        fastcgi_pass unix:/var/run/php/php${PHP_VER}-fpm.sock;
         fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
         fastcgi_read_timeout 300;
     }
@@ -250,8 +255,9 @@ server {
         deny all;
     }
 }
-NGINXEOF"
+NGINXEOF
 
+    sudo mv "$TMP_CONF" "$NGINX_CONF"
     sudo ln -sf /etc/nginx/sites-available/mirzabotconfig /etc/nginx/sites-enabled/mirzabotconfig
     sudo rm -f /etc/nginx/sites-enabled/default
 }
@@ -1973,7 +1979,10 @@ function install_additional_bot() {
     # Configure nginx for additional bot
     BOT_DIR="/var/www/html/$BOT_NAME"
     NGINX_CONF="/etc/nginx/sites-available/$DOMAIN_NAME.conf"
-    sudo bash -c "cat > $NGINX_CONF <<NGINXEOF
+    TMP_CONF=$(mktemp)
+    local PHP_VER=$(detect_php_version)
+
+    cat > "$TMP_CONF" <<NGINXEOF
 server {
     listen 80;
     server_name $DOMAIN_NAME;
@@ -1999,7 +2008,7 @@ server {
 
     location ~ \.php\$ {
         include fastcgi_params;
-        fastcgi_pass unix:/var/run/php/php$(detect_php_version)-fpm.sock;
+        fastcgi_pass unix:/var/run/php/php${PHP_VER}-fpm.sock;
         fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
         fastcgi_read_timeout 300;
     }
@@ -2008,7 +2017,8 @@ server {
         deny all;
     }
 }
-NGINXEOF"
+NGINXEOF
+    sudo mv "$TMP_CONF" "$NGINX_CONF"
     sudo ln -sf "$NGINX_CONF" "/etc/nginx/sites-enabled/$DOMAIN_NAME.conf"
 
     # Configure the Bot
